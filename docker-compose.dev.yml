@@ -1,0 +1,53 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: dericsolen/lms:1.0
+    container_name: lms_backend_api
+    ports:
+      - "0.0.0.0:9000:80"
+    volumes:
+      - ./src:/apps/src
+      - ./.env:/apps/.env:ro
+      - ./migrations:/apps/migrations
+      - ./alembic.ini:/apps/alembic.ini:rw
+    depends_on:
+      - relation_db
+    develop:
+      # Create a `watch` configuration to update the appl
+      # https://docs.docker.com/compose/file-watch/#compose-watch-versus-bind-mounts
+      watch:
+        # # Sync the working directory with the `/app` directory in the container
+        # - action: sync
+        #   path: .
+        #   target: /apps
+        #   # Exclude the project virtual environment — it could be for a
+        #   # different platform in the container
+        #   ignore:
+        #     - .venv/
+
+        # Rebuild the image on changes to the `pyproject.toml` (--watch )
+        - action: rebuild
+          path: pyproject.toml
+    
+    stdin_open: true
+    tty: true
+
+  relation_db:
+    image: postgres:16
+    container_name: lms_relational_db
+    env_file:
+      - .env
+    volumes:
+      - lms_relational_db_data:/var/lib/postgresql/data
+    # ports:
+    #   - "5731:5432"
+    develop:
+      watch:
+        - action: restart
+          path: .env
+      
+volumes:
+  lms_relational_db_data:
+    external: false
