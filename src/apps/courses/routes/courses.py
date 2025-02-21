@@ -1,7 +1,8 @@
 import uuid
 from typing import List
 
-from fastapi import APIRouter, Depends, status, Response
+from fastapi import APIRouter, Depends, status, Response, HTTPException
+from sqlalchemy.exc import MultipleResultsFound, NoResultFound
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -25,7 +26,7 @@ async def get_courses(
     return await CourseService.list(database_session)
 
 
-@course_router.post("/create")
+@course_router.post("/create", response_model=Course)
 async def create_course(
     course: CourseCreationSchema,
     database_session: AsyncSession = Depends(get_session_db),
@@ -38,21 +39,56 @@ async def create_course(
 async def delete_course(
     id: uuid.UUID, database_session: AsyncSession = Depends(get_session_db)
 ) -> Response:
-    await CourseService.delete(id=id, session=database_session)
+    try:
+        await CourseService.delete(id=id, session=database_session)
+
+    except MultipleResultsFound as _:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Multiple result where found",
+        )
+
+    except NoResultFound as _:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="No result where found"
+        )
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@course_router.get("/detail/{id}")
+@course_router.get("/detail/{id}", response_model=Course)
 async def get_course(
     id: uuid.UUID, database_session: AsyncSession = Depends(get_session_db)
 ) -> Course:
-    return await CourseService.get(id=id, session=database_session)
+    try:
+        return await CourseService.get(id=id, session=database_session)
+    except MultipleResultsFound as _:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Multiple result where found",
+        )
+
+    except NoResultFound as _:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="No result where found"
+        )
 
 
-@course_router.patch("/update/{id}")
+@course_router.patch("/update/{id}", response_model=Course)
 async def update_course(
     id: uuid.UUID,
     course: CourseUpdatingSchema,
     database_session: AsyncSession = Depends(get_session_db),
 ) -> Course:
-    return await CourseService.update(data=course, id=id, session=database_session)
+    try:
+        return await CourseService.update(data=course, id=id, session=database_session)
+
+    except MultipleResultsFound as _:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Multiple result where found",
+        )
+
+    except NoResultFound as _:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="No result where found"
+        )
