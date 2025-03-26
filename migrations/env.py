@@ -13,7 +13,7 @@ from alembic import context
 from src.apps.courses.models import Course
 from src.apps.auth.models import User
 
-from src.configs.database_configs import pg_configs
+from src.configs.settings import pg_configs
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

@@ -1,12 +1,14 @@
 import uuid
 from typing import List
 
-from fastapi import APIRouter, Depends, status, Response, HTTPException
+from fastapi import APIRouter, Depends, status, Response, HTTPException, Request
 from sqlalchemy.exc import MultipleResultsFound, NoResultFound
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.db.async_database import get_session_db
+from src.apps.auth.users import current_user
+from src.apps.auth.models import User
 
 from ..models import Course
 from ..schemas import CourseCreationSchema, CourseUpdatingSchema
@@ -18,7 +20,10 @@ course_router = APIRouter(tags=["Courses"], prefix="/courses")
 
 @course_router.get("/", response_model=List[Course])
 async def get_courses(
+    request: Request,
     database_session: AsyncSession = Depends(get_session_db),
+    user: User | None = Depends(current_user),
+    # TODO: user is Authenticated
 ) -> List[Course]:
     """
     Get a list of all the courses.

@@ -5,8 +5,12 @@ services:
       dockerfile: Dockerfile
     image: dericsolen/lms:1.0
     container_name: lms_backend_api
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ALGORITHM: ${JWT_ALGORITHM}
+      JWT_EXPIRATION: ${JWT_EXPIRATION}
     ports:
-      - "0.0.0.0:9000:80"
+      - "0.0.0.0:9000:5768"
     volumes:
       - ./src:/apps/src
       - ./.env:/apps/.env:ro
@@ -15,19 +19,7 @@ services:
     depends_on:
       - relation_db
     develop:
-      # Create a `watch` configuration to update the appl
-      # https://docs.docker.com/compose/file-watch/#compose-watch-versus-bind-mounts
       watch:
-        # # Sync the working directory with the `/app` directory in the container
-        # - action: sync
-        #   path: .
-        #   target: /apps
-        #   # Exclude the project virtual environment — it could be for a
-        #   # different platform in the container
-        #   ignore:
-        #     - .venv/
-
-        # Rebuild the image on changes to the `pyproject.toml` (--watch )
         - action: rebuild
           path: pyproject.toml
     
@@ -37,17 +29,32 @@ services:
   relation_db:
     image: postgres:16
     container_name: lms_relational_db
-    env_file:
-      - .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_PORT: ${POSTGRES_PORT}
     volumes:
       - lms_relational_db_data:/var/lib/postgresql/data
-    # ports:
-    #   - "5731:5432"
     develop:
       watch:
         - action: restart
           path: .env
       
+  nginx:
+    image: nginx:stable-alpine3.20-perl
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/certs:/etc/nginx/certs:ro
+      - ./nginx/common_proxy.conf:/etc/nginx/common_proxy.conf:ro
+      - ./nginx/common_ssl.conf:/etc/nginx/common_ssl.conf:ro
+    depends_on:
+      - api
+
 volumes:
   lms_relational_db_data:
     external: false

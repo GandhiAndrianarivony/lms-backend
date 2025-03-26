@@ -5,7 +5,7 @@ from typing import AsyncGenerator
 from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy.orm import sessionmaker
 
-from src.configs.database_configs import pg_configs
+from src.configs.settings import pg_configs
 
 
 DATABASE_URL = f"postgresql+asyncpg://{pg_configs.USER}:{pg_configs.PASSWORD}@{pg_configs.HOST}:{pg_configs.PORT}/{pg_configs.DB}"

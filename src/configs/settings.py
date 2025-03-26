@@ -1,6 +1,13 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+# Load from environment variables
+class JWTConfigs(BaseSettings):
+    JWT_SECRET: str
+    JWT_ALGORITHM: str
+    JWT_EXPIRATION: int
 
+
+# Load from .env file
 class PostgreSQLConfigs(BaseSettings):
     USER: str
     PASSWORD: str

@@ -21,11 +21,18 @@ ENV PYTHONUNBUFFERED 1
 COPY pyproject.toml uv.lock ./
 RUN uv sync
 
+RUN apt-get install ca-certificates
+COPY ./nginx/certs/nginx-selfsigned.crt /usr/local/share/ca-certificates/
+# Update CA certificates to include your self-signed certificate
+RUN update-ca-certificates
+
 # Create a non-root user
 RUN useradd --create-home lms
 USER lms
 
+
 # Place executables in the environment at the front of the path
 ENV PATH="/apps/.venv/bin:$PATH"
 
-CMD ["uvicorn", "src.main:app", "--port", "80", "--host", "0.0.0.0", "--reload", "--workers", "2"]
+EXPOSE 5768
+CMD ["uvicorn", "src.main:app", "--log-level", "info" ,"--port=5768", "--host", "0.0.0.0", "--reload", "--workers", "2"]

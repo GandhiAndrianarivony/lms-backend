@@ -22,7 +22,7 @@ async def list(session: AsyncSession) -> List[Course]:
 
 
 async def create(data: CourseCreationSchema, session: AsyncSession) -> Course:
-    dumped_data = data.model_dump()
+    dumped_data = data.model_dump() #
     new_course = Course(**dumped_data)
     session.add(new_course)
     await session.commit()
